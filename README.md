@@ -1,3 +1,9 @@
+**Universidade Federal do Maranhão**  
+Centro de Ciências Sociais Aplicadas – CCSO  
+Mestrado em Desenvolvimento Socioeconômico – PPGDSE
+
+---
+
 # Minicurso de Métodos Computacionais Aplicados à Economia
 
 ## Professor: Dr. Ricardo Aguirre Leal (ICEAC)
@@ -38,8 +44,3 @@ Introduzir habilidades fundamentais de programação necessárias para analisar 
 
 Disciplina com aulas expositivas dialogadas, práticas computacionais, demonstrações e resolução de exercícios individuais e colaborativos.
 
----
-
-**Universidade Federal do Maranhão**  
-Centro de Ciências Sociais Aplicadas – CCSO  
-Mestrado em Desenvolvimento Socioeconômico – PPGDSE
