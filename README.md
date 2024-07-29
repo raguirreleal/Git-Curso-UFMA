@@ -6,8 +6,6 @@ Mestrado em Desenvolvimento Socioeconômico – PPGDSE
 
 # Minicurso de Métodos Computacionais Aplicados à Economia
 
-## Professor: Dr. Ricardo Aguirre Leal (ICEAC)
-
 O minicurso é concebido para alunos iniciantes de mestrado em economia oferecendo uma introdução essencial às habilidades de programação necessárias para realizar análises econômicas contemporâneas. Este minicurso prático utiliza linguagens de programação chave como R, Python, MATLAB e Stata que são fundamentais no ambiente acadêmico e profissional de economia.
 
 Os participantes do minicurso desenvolverão competências para, de forma eficiente e organizada, manipular dados, realizar análises estatísticas, modelar e criar simulações de sistemas econômicos. O conteúdo abrange desde os princípios básicos, como tipos de dados e estruturas de controle, até aspectos mais avançados, como programação orientada a objetos e o uso de ferramentas de desenvolvimento colaborativo, incluindo Git e IDEs.
