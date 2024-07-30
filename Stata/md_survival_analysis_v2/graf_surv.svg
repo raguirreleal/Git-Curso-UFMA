@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- This is a Stata 17.0 generated SVG file (http://www.stata.com) -->
+
+<svg version="1.1" width="5.500in" height="4.000in" viewBox="0 0 3960 2880" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<desc>Stata Graph - Graph</desc>
+	<rect x="0" y="0" width="3960" height="2880" style="fill:#EAF2F3;stroke:none"/>
+	<rect x="0.00" y="0.00" width="3959.88" height="2880.00" style="fill:#EAF2F3"/>
+	<rect x="2.88" y="2.88" width="3954.12" height="2874.24" style="fill:none;stroke:#EAF2F3;stroke-width:5.76"/>
+	<rect x="290.81" y="275.35" width="3568.21" height="1958.28" style="fill:#FFFFFF"/>
+	<rect x="293.69" y="278.23" width="3562.45" height="1952.52" style="fill:none;stroke:#FFFFFF;stroke-width:5.76"/>
+	<line x1="290.81" y1="1712.38" x2="3859.02" y2="1712.38" style="stroke:#EAF2F3;stroke-width:8.64"/>
+	<line x1="290.81" y1="1254.49" x2="3859.02" y2="1254.49" style="stroke:#EAF2F3;stroke-width:8.64"/>
+	<line x1="290.81" y1="796.60" x2="3859.02" y2="796.60" style="stroke:#EAF2F3;stroke-width:8.64"/>
+	<line x1="290.81" y1="338.71" x2="3859.02" y2="338.71" style="stroke:#EAF2F3;stroke-width:8.64"/>
+	<defs>
+		<path id="path_XGmGVwGU" d="M583.61 468.78 L583.61 468.78 L813.04 468.78 L813.04 703.79 L1042.47 703.79 L1042.47 784.72 L1271.90 784.72 L1271.90 933.23 L1501.34 933.23 L1501.34 992.38 L1730.77 992.38 L1730.77 1117.62 L1960.20 1117.62 L1960.20 1160.44 L2189.63 1160.44 L2189.63 1255.73 L2419.07 1255.73 L2419.07 1299.79 L2648.50 1299.79 L2648.50 1398.67 L2877.93 1398.67 L2877.93 1442.23 L3107.36 1442.23 L3107.36 1600.76 L3107.36 1529.85 L3107.36 1389.01 L2877.93 1389.01 L2877.93 1352.38 L2648.50 1352.38 L2648.50 1258.58 L2419.07 1258.58 L2419.07 1217.24 L2189.63 1217.24 L2189.63 1124.18 L1960.20 1124.18 L1960.20 1082.72 L1730.77 1082.72 L1730.77 960.21 L1501.34 960.21 L1501.34 902.66 L1271.90 902.66 L1271.90 757.74 L1042.47 757.74 L1042.47 679.28 L813.04 679.28 L813.04 453.43 L583.61 453.43 L583.61 468.78 Z" stroke-linejoin="round"/>
+	</defs>
+	<defs>
+		<clipPath id="clipPath_ZdofblJU">
+			<use xlink:href="#path_XGmGVwGU"/>
+		</clipPath>
+	</defs>
+	<use xlink:href="#path_XGmGVwGU" style="stroke:none;fill:#DDE3E9"/>
+	<use xlink:href="#path_XGmGVwGU" style="fill:none;stroke:#DDE3E9;stroke-width:17.28" clip-path="url(#clipPath_ZdofblJU)"/>
+	<path d=" M583.48 468.90 L812.91 468.90 L812.91 703.79 L1042.35 703.79 L1042.35 784.85 L1271.78 784.85 L1271.78 933.35 L1501.34 933.35 L1501.34 992.51 L1730.77 992.51 L1730.77 1117.74 L1960.20 1117.74 L1960.20 1160.44 L2189.63 1160.44 L2189.63 1255.85 L2419.07 1255.85 L2419.07 1299.79 L2648.50 1299.79 L2648.50 1398.79 L2877.93 1398.79 L2877.93 1442.23 L3107.36 1442.23 L3107.36 1600.88" stroke-linejoin="round" style="fill:none;stroke:#8DA3B7;stroke-width:8.64"/>
+	<path d=" M583.48 453.56 L812.91 453.56 L812.91 679.41 L1042.35 679.41 L1042.35 757.74 L1271.78 757.74 L1271.78 902.78 L1501.34 902.78 L1501.34 960.33 L1730.77 960.33 L1730.77 1082.85 L1960.20 1082.85 L1960.20 1124.30 L2189.63 1124.30 L2189.63 1217.24 L2419.07 1217.24 L2419.07 1258.58 L2648.50 1258.58 L2648.50 1352.51 L2877.93 1352.51 L2877.93 1389.14 L3107.36 1389.14 L3107.36 1529.97" stroke-linejoin="round" style="fill:none;stroke:#8DA3B7;stroke-width:8.64"/>
+	<path d=" M354.05 338.84 L583.48 338.84 L583.48 460.98 L812.91 460.98 L812.91 691.41 L1042.35 691.41 L1042.35 771.11 L1271.78 771.11 L1271.78 917.88 L1501.34 917.88 L1501.34 976.29 L1730.77 976.29 L1730.77 1100.17 L1960.20 1100.17 L1960.20 1142.25 L2189.63 1142.25 L2189.63 1236.42 L2419.07 1236.42 L2419.07 1279.12 L2648.50 1279.12 L2648.50 1375.52 L2877.93 1375.52 L2877.93 1415.62 L3107.36 1415.62 L3107.36 1565.49" stroke-linejoin="round" style="fill:none;stroke:#1A476F;stroke-width:8.64"/>
+	<line x1="290.81" y1="2233.63" x2="290.81" y2="275.35" style="stroke:#000000;stroke-width:5.76"/>
+	<line x1="290.81" y1="2170.27" x2="250.84" y2="2170.27" style="stroke:#000000;stroke-width:5.76"/>
+	<text x="200.73" y="2170.27" style="font-family:'Helvetica';font-size:99.99px;fill:#000000" transform="rotate(-90 200.73,2170.27)" text-anchor="middle">0</text>
+	<line x1="290.81" y1="1712.38" x2="250.84" y2="1712.38" style="stroke:#000000;stroke-width:5.76"/>
+	<text x="200.73" y="1712.38" style="font-family:'Helvetica';font-size:99.99px;fill:#000000" transform="rotate(-90 200.73,1712.38)" text-anchor="middle">.25</text>
+	<line x1="290.81" y1="1254.49" x2="250.84" y2="1254.49" style="stroke:#000000;stroke-width:5.76"/>
+	<text x="200.73" y="1254.49" style="font-family:'Helvetica';font-size:99.99px;fill:#000000" transform="rotate(-90 200.73,1254.49)" text-anchor="middle">.5</text>
+	<line x1="290.81" y1="796.60" x2="250.84" y2="796.60" style="stroke:#000000;stroke-width:5.76"/>
+	<text x="200.73" y="796.60" style="font-family:'Helvetica';font-size:99.99px;fill:#000000" transform="rotate(-90 200.73,796.60)" text-anchor="middle">.75</text>
+	<line x1="290.81" y1="338.71" x2="250.84" y2="338.71" style="stroke:#000000;stroke-width:5.76"/>
+	<text x="200.73" y="338.71" style="font-family:'Helvetica';font-size:99.99px;fill:#000000" transform="rotate(-90 200.73,338.71)" text-anchor="middle">1</text>
+	<line x1="290.81" y1="2233.63" x2="3859.02" y2="2233.63" style="stroke:#000000;stroke-width:5.76"/>
+	<line x1="354.17" y1="2233.63" x2="354.17" y2="2273.73" style="stroke:#000000;stroke-width:5.76"/>
+	<text x="354.17" y="2363.59" style="font-family:'Helvetica';font-size:99.99px;fill:#000000" text-anchor="middle">0</text>
+	<line x1="1501.34" y1="2233.63" x2="1501.34" y2="2273.73" style="stroke:#000000;stroke-width:5.76"/>
+	<text x="1501.34" y="2363.59" style="font-family:'Helvetica';font-size:99.99px;fill:#000000" text-anchor="middle">5</text>
+	<line x1="2648.50" y1="2233.63" x2="2648.50" y2="2273.73" style="stroke:#000000;stroke-width:5.76"/>
+	<text x="2648.50" y="2363.59" style="font-family:'Helvetica';font-size:99.99px;fill:#000000" text-anchor="middle">10</text>
+	<line x1="3795.66" y1="2233.63" x2="3795.66" y2="2273.73" style="stroke:#000000;stroke-width:5.76"/>
+	<text x="3795.66" y="2363.59" style="font-family:'Helvetica';font-size:99.99px;fill:#000000" text-anchor="middle">15</text>
+	<text x="2074.92" y="2473.60" style="font-family:'Helvetica';font-size:99.99px;fill:#000000" text-anchor="middle">Analysis time</text>
+	<rect x="977.63" y="2558.24" width="2194.71" height="186.37" style="fill:#FFFFFF"/>
+	<rect x="980.50" y="2561.12" width="2188.95" height="180.61" style="fill:none;stroke:#000000;stroke-width:5.76"/>
+	<rect x="1020.81" y="2601.43" width="374.34" height="99.99" style="fill:#DDE3E9"/>
+	<rect x="1025.13" y="2605.75" width="365.70" height="91.35" style="fill:none;stroke:#DDE3E9;stroke-width:8.64"/>
+	<line x1="1936.44" y1="2651.43" x2="2310.78" y2="2651.43" style="stroke:#1A476F;stroke-width:8.64"/>
+	<text x="1455.18" y="2686.46" style="font-family:'Helvetica';font-size:99.99px;fill:#000000">95% CI</text>
+	<text x="2370.80" y="2686.46" style="font-family:'Helvetica';font-size:99.99px;fill:#000000">Survivor function</text>
+	<text x="2074.92" y="215.98" style="font-family:'Helvetica';font-size:139.96px;fill:#1E2D53" text-anchor="middle">Kaplan–Meier survival estimate</text>
+</svg>
