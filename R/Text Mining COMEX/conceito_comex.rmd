@@ -1,0 +1,590 @@
+---
+title: '>> **CONCEITO COMEX**'
+author: '*Relatório por: Ricardo Aguirre Leal (ricardo.leal@furg.br)*'
+date: '*Versão 1.0 -- `r format(Sys.time(), "%d %B, %Y")`*'
+output:
+  html_document:
+    df_print: paged
+    fig_width: 8.5
+    highlight: tango
+    number_sections: true
+    theme: lumen
+    toc: true
+    toc_float: true
+editor_options:
+  chunk_output_type: console
+---
+
+<style type="text/css">
+  body{
+   font-size: 14pt;
+  }
+</style>
+ 
+```{r include=F}
+knitr::opts_chunk$set(
+  echo = F
+)
+```
+
+```{r include=F}
+library(readxl); library(stringr)
+library(lmtest); library(foreach)
+library(magrittr); library(tidyverse); library(stargazer)
+library(tidytext); library(tm); library(widyr)
+library(ggplot2); library(wordcloud2); library(wordcloud); 
+library(scales); library(igraph); library(ggraph)
+```
+
+# ANÁLISE DA ATRIBUIÇÃO MANUAL - *Tópicos do conceito*
+
+Atribuição do conceito a um tópico realizado pelos pesquisadores do trabalho. Quantidade de tópicos e tópicos criados de acordo com a precepção dos pesquisadores; antes dos procedimentos e resultados do *text mining*
+
+
+## Construção dos dados
+
+```{r warning=FALSE}
+manual = read_excel("dados_textos.xlsx", col_types = c("numeric", rep("text", 15)))
+manual %<>% select(-obs, -quem)
+```
+
+### Exclusão trabalhos não classificados quanto à publicação ou tópico ou sem palavras-chave
+
+
+```{r }
+col_p = str_which(names(manual), "p_")
+  n_p = length(col_p)
+col_t = str_which(names(manual), "t_")
+  n_t = length(col_t)
+fncol = function(y) {x=y[[1]]; x[which(!is.na(x))] = names(y) %>% str_sub(3); x}
+mncol = foreach(i=c(col_p, col_t), .combine=cbind) %do% fncol(manual[,i])
+mncolp  = mncol[,1:n_p]
+mncolt  = mncol[,(n_p+1):ncol(mncol)]
+
+lsem_p = apply(mncolp, 2, function(x) !is.na(x)) %>% rowSums()==0
+lsem_t = apply(mncolt, 2, function(x) !is.na(x)) %>% rowSums()==0 
+ondesem_p = which(lsem_p)
+ondesem_t = which(lsem_t)
+
+sem_p = manual[ondesem_p,1:3]
+sem_t = manual[ondesem_t,1:3]
+
+ondetp   = unique(c(ondesem_p, ondesem_t))
+sem_toup = manual %>% .[ondetp, ] %>% select(1:3) 
+sem_toup  %<>% mutate(titulo = str_sub(str_extract(sem_toup$titulo, ".*"), 1, 50)) %>%
+  cbind(., falta_publ = ondetp %in% ondesem_p, falta_topi = ondetp %in% ondesem_t) %>% tibble() 
+
+Mdados_csk = manual[-ondetp, ]
+
+```
+
+A quantidade de trabalhos sem a classificação da publicação é `r length(col_p)`
+
+A quantidade de trabalhos sem a classificação do tópico é `r length(col_t)`
+
+Sem a classificação de um ou outro é `r length(ondetp)`
+
+A quantidade de trabalhos restante, após exclusão dos não classificados é `r nrow(Mdados_csk)`
+
+Tem classificações em mais de um tópico. De forma arbitrária, mantive a da classificação que fica na coluna mais à esquerda...
+
+*Lista dos trabalhos sem classificação de publicação ou tópico:*
+
+```{r }
+sem_toup
+```
+
+```{r }
+mncol = foreach(i=c(col_p, col_t), .combine=cbind) %do% fncol(Mdados_csk[,i])
+mncolp  = mncol[,1:n_p]
+mncolt  = mncol[,(n_p+1):ncol(mncol)]
+imncolp = (!is.na(mncolp)) %>% which(arr.ind = TRUE) %>% .[order(.[,1]), ] 
+imncolt = (!is.na(mncolt)) %>% which(arr.ind = TRUE) %>% .[order(.[,1]), ]
+imncolt = distinct_at(as.data.frame(imncolt), "row", .keep_all = TRUE) %>% as.matrix()
+
+vncol_p = mncolp[imncolp]
+vncol_t = mncolt[imncolt]
+
+Mdados_csk = cbind(Mdados_csk[ ,-c(col_p, col_t)], publicacao = vncol_p, topico = vncol_t) %>% tibble() 
+
+rm(i, col_p, col_t, fncol, ondetp, imncolp, imncolt, vncol_p, vncol_t, lsem_p, lsem_t, ondesem_p, ondesem_t)
+```
+
+### Exclusão dos trabalhos sem as palavras-chave
+
+A exclusão é feita depois de já retirados os trabalhos sem classificação de publicação ou tópico
+
+```{r }
+ondesem_key = which(is.na(Mdados_csk$keywords))
+sem_key = Mdados_csk[ondesem_key, ] 
+sem_key %<>% mutate(titulo = str_sub(str_extract(sem_key$titulo, ".*"), 1, 50)) %>% select(1:3)
+
+Mdados = Mdados_csk[-ondesem_key, ]
+```
+
+A quantidade de trabalhos sem as palavras-chave (keywords) é `r length(ondesem_key)`
+
+A quantidade de trabalhos restante para análise é `r nrow(Mdados)`
+
+*Lista dos trabalhos sem palavras-chave, depois de já retirados os trabalhos sem publicação ou tópico:*
+
+```{r }
+sem_key
+```
+
+## Tokenization, por palavra, das palavras-chave
+
+Aqui, tokens são as palavras das palavras-chave (keywords). Poderíamos optar por tokens como expressões (possivelmente mais de uma palavra), e.g. as palavras entre ponto-e-vírgulas.
+
+
+### Exclusão das stopwords e de números constante no conjunto das palavras
+
+
+Stopwords são palavras comuns na língua e que possuem pouco significado para a análise.
+
+Nos nossos documentos e suas palavras-chave, as palavras com números e os próprios números, como resultados estatísticos, datas etc., não tem muito significado em nossa análise de significado de COMEX, por isso retiramos os tokens com números. (Mesmo estando usando as palavras-chave dos trabalhos, encontrei números neles)
+
+Todas as palavras foram convertidas para caracteres minúsculos, a fim de conformidade. 
+
+*Lista das stopwords retiradas dentre os tokens:*
+
+```{r warning=FALSE}
+stopwords(kind = "pt") %>% c(" ") %>% matrix(ncol = 6) %>% as_tibble()
+```
+
+```{r }
+tk.key = Mdados %>% unnest_tokens(word, keywords) 
+# remover stopwords de português
+tk.key = anti_join(tk.key, tibble(stopword=stopwords(kind = "pt")), by=c("word"="stopword")) 
+# remover números
+tk.key = semi_join(tk.key, tibble(semnum=removeNumbers(tk.key$word)), by=c("word"="semnum")) 
+```
+
+
+## Palavras-chave mais frequentes nos documentos
+
+É um total de `r length(unique(tk.key$word))` palavras (tokens) distintas após os ajustes anteriores
+
+A sequir, a lista das 100 mais frequentes, o gráfico das 15 mais frequentes e a nuvem de palavras.
+
+*Lista das top 100:*
+
+```{r }
+tk.key %>% count(word, sort = TRUE) %>% slice(1:100)
+
+```
+
+*Gráfico das top 15:*
+
+```{r }
+tk.key %>%
+  count(word, sort = TRUE) %>%
+  slice(1:15) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+    geom_col() +
+    xlab(NULL) +
+    coord_flip()
+```
+
+
+
+## Stem (raiz) das Palavras-chave mais frequentes nos documentos
+
+*Em morfologia linguística e recuperação de informação a stemização (do inglês, stemming) é o processo de reduzir palavras flexionadas (ou às vezes derivadas) ao seu tronco (stem), base ou raiz, geralmente uma forma da palavra escrita. O tronco não precisa ser idêntico à raiz morfológica da palavra; ele geralmente é suficiente que palavras relacionadas sejam mapeadas para o mesmo tronco, mesmo se este tronco não for ele próprio uma raiz válida. (Wikipedia)*. Veja <https://pt.wikipedia.org/wiki/Stemiza%C3%A7%C3%A3o> ou <https://en.wikipedia.org/wiki/Stemming>
+
+Esse aqui é o algorítmo usitlizado no steming: Porter(1980), o mais usado <https://www.emerald.com/insight/content/doi/10.1108/eb046814/full/html>
+
+```{r }
+tk.skey = tk.key %>% mutate(word = stemDocument(tk.key$word, language = "pt")) 
+```
+
+```{r}
+ch.acento     = "áâãéêíóõôúüç"
+ch.sem.acento = "aaaeeiooouuc"
+
+for (i in 1:nrow(tk.skey)) tk.skey$word[i] = chartr(ch.acento, ch.sem.acento, tk.skey$word[i])
+```
+
+Também é feita uma transformação dos caracteres com acento em sem acento, para conformidade 
+
+É um total de `r length(unique(tk.skey$word))` palavras (tokens) distintas após os ajustes e a stemization
+
+A sequir, a lista das 50 mais frequentes e o gráfico das 15 mais frequentes.
+
+*Lista das top 50:*
+
+```{r }
+tk.skey$word[ tk.skey$word=="brasileir" ] = "brasil"
+tk.skey %>% count(word, sort = TRUE) %>% slice(1:50)
+```
+
+A palavra tronco "export" (com ramos "exportações", "exportação", "exportou" etc.) passou a ser mais importante (maior frequente) que a palavra e palavra tronco "exterior". A palavra tronco "econom" também despontou dentre as top 5.
+
+Obs: O token "brasileir" (com frequencia de 16) apareceu como diferente do "brasil" (com 35), pois o algoritmo não considerou o segundo como tronco (stem)do primeiro. Por isso, fiz a transformação manualmente, já aplicada e apresentada na lista acima 
+
+*Gráfico das top 15:*
+
+```{r }
+tk.skey %>%
+  count(word, sort = TRUE) %>%
+  slice(1:15) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) +
+    geom_col() +
+    xlab(NULL) +
+    coord_flip()
+```
+
+*Nuvem de palavras stem, exceto as duas primeiras (que destoam bastante):*
+
+```{r }
+#wordcloud(tk.key$word, fixed.asp = TRUE, colors= c("black", "green"))
+tk.skey %>% count(word, sort = TRUE) %>% wordcloud2(size = 3)
+```
+
+
+## Análise dos tópicos atribuídos e sua evolução
+
+
+### Frequência dos tópicos
+
+
+*Quantidade por tópico:*
+
+```{r }
+ntopico = Mdados %>% count(topico, sort = TRUE)
+ntopico
+```
+
+*Gráfico da quantidade por tópico:*
+
+```{r }
+Mdados %>%
+  count(topico, sort = TRUE) %>%
+  slice(1:15) %>%
+  mutate(topico = reorder(topico, n)) %>%
+  ggplot(aes(topico, n)) +
+    geom_col() +
+    xlab(NULL) +
+    coord_flip()
+```
+
+
+### Evolução da quantidade de trabalhos e da frequência dos tópicos
+
+
+*Quantidade de trabalhos por ano:*
+
+```{r }
+topicos.ano = Mdados %>% group_by(ano) %>% count(topico)
+topicos.ttano = topicos.ano %>% summarise(soma_anual = sum(n))
+topicos.ttano
+```
+
+*Quantidade da evolução anual da amostra de trabalhos:*
+
+```{r }
+topicos.ttano %>% ggplot(aes(ano, soma_anual)) +
+  geom_point(size = 4) + 
+  geom_line(size = 1.5) +
+  xlab(NULL) 
+```
+
+*Gráfico da evolução das frequencias absolutas anuais dos tópicos:*
+
+```{r }
+topicos.ano %>%
+  ggplot(aes(ano, n, colour = topico)) +
+  geom_point(show.legend = FALSE, size = 4) +  
+  geom_line(show.legend = FALSE, size = 1.5) +
+    xlab(NULL) +
+    #coord_flip() +
+    facet_wrap(~topico)
+
+```
+
+*Gráfico da evolução das frequencias relativas (%) anuais dos tópicos:*
+
+```{r }
+topicos.frano = topicos.ano %>% left_join(topicos.ttano) %>% mutate(n_rel = (n/soma_anual)*100)
+
+topicos.frano %>%
+  ggplot(aes(ano, n_rel, colour = topico)) +
+  geom_point(show.legend = FALSE, size = 4) +  
+  geom_line(show.legend = FALSE, size = 1.5) +
+    xlab(NULL) +
+    #coord_flip() +
+    facet_wrap(~topico)
+
+```
+
+
+## Análise dos tipos de publicação atribuídos e sua evolução
+
+
+### Frequência dos tipos de publicação
+
+
+*Quantidade por tópico:*
+
+```{r }
+publicacao.ano = Mdados %>% group_by(ano) %>% count(publicacao)
+npublicacao = Mdados %>% count(publicacao, sort = TRUE)
+npublicacao
+```
+
+*Gráfico da quantidade por tipos de publicação:*
+
+```{r }
+Mdados %>%
+  count(publicacao, sort = TRUE) %>%
+  mutate(publicacao = reorder(publicacao, n)) %>%
+  ggplot(aes(publicacao, n)) +
+    geom_col() +
+    xlab(NULL) +
+    coord_flip()
+```
+
+
+### Evolução da frequência dos tipos de publicação
+
+*Gráfico da evolução das frequencias absolutas anuais dos tipos de publicação:*
+
+```{r }
+publicacao.ano %>%
+  ggplot(aes(ano, n, colour = publicacao)) +
+  geom_point(show.legend = FALSE, size = 4) +  
+  geom_line(show.legend = FALSE, size = 1.5) +
+    xlab(NULL) +
+    #coord_flip() +
+    facet_wrap(~publicacao)
+
+```
+
+*Gráfico da evolução das frequencias relativas (%) anuais dos tipos de publicação:*
+
+```{r }
+publicacao.frano = publicacao.ano %>% left_join(topicos.ttano) %>% mutate(n_rel = (n/soma_anual)*100)
+
+publicacao.frano %>%
+  ggplot(aes(ano, n_rel, colour = publicacao)) +
+  geom_point(show.legend = FALSE, size = 4) +  
+  geom_line(show.legend = FALSE, size = 1.5) +
+    xlab(NULL) +
+    #coord_flip() +
+    facet_wrap(~publicacao)
+
+```
+
+
+## Análise da relação entre as frequencias dos tópicos e dos tipos de publicação
+
+```{r }
+Mdadosr = Mdados %>% right_join(mutate(ntopico, n = rev(rank(n)))) %>% 
+  mutate(topico, topico = paste0(n, "_" ,topico)) %>% select(-n)
+Mdadosr = Mdadosr %>% right_join(mutate(npublicacao, n = rev(rank(n)))) %>% 
+  mutate(publicacao, publicacao = paste0(n, "_" ,publicacao)) %>% select(-n)
+```
+
+*Lista das frequencias dos pares, classificada por tipo de publicação:*
+
+```{r }
+freq_pt  = Mdados  %>% count(publicacao, topico) %>% arrange(publicacao, desc(n))
+freq_ptr = Mdadosr %>% count(publicacao, topico) %>% arrange(publicacao, desc(n))
+freq_ptr
+```
+
+*Lista das frequencias dos pares, classificada por tópico:*
+
+```{r }
+freq_ptr %>% arrange(topico, desc(n))
+```
+
+
+*Gráfico da rede de conexões entre tópicos e tipos de publicação:*
+
+```{r }
+freq_pt_graph = freq_pt %>% graph_from_data_frame()
+
+a <- grid::arrow(type = "closed", length = unit(.1, "inches"))
+
+ggraph(freq_pt_graph, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n, edge_width = n), show.legend = FALSE, edge_colour = "cyan4") +
+  geom_node_point(color = "lightgreen", size = 11) +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1) 
+```
+
+*Gráfico matricial das relações entre os tópicos e os tipos de publicação:*
+
+```{r }
+ggplot(freq_ptr, aes(topico, publicacao)) +
+  geom_raster(aes(fill = n)) + 
+  #geom_raster(aes(fill = n), interpolate = TRUE) + 
+  scale_fill_gradient2(high = "cyan4") +
+  #scale_fill_gradient2(high = "black", label = percent_format()) +
+  theme_minimal() 
+```
+
+É esperado que, em termos absolutos, os tipos de publicação com maior frequencia estejam relacionados com os tópicos de maior frequencia. No entanto, é interessante relacionar as frequencias relativas, ponderadas pelas frequancias de cada classificação. Assim, divido a frequencia de cada par pelas frequencias de cada classificação do par:
+$$ f_{p,t}^{rel} = \dfrac{f_{p,t}}{f_{p}\cdot f_{t}} $$
+
+...onde $f_{t}$ é a frequencia do tópico $t$, $f_{p}$ é a frequencia da publicação $p$, $f_{p,t}$ é a frequencia (absoluta) dos trabalhos com o tópico $t$ e a publicação $p$ e $f_{p,t}^{rel}$ é a frequencia relativa dos trabalhos com o tópico $t$ e a publicação $p$, ponderada pelas frequencias marginais. 
+
+```{r }
+npublicacaor = mutate(arrange(npublicacao, rev(n)), 
+                      publicacao = paste0(1:nrow(npublicacao), "_", publicacao))
+ntopicor = mutate(arrange(ntopico, rev(n)), 
+                      topico = paste0(1:nrow(ntopico), "_", topico))
+freqR_ptr = rename(freq_ptr, f_pt = n) %>% left_join(ntopicor) %>% 
+  rename(f_t = n) %>% left_join(npublicacaor) %>% rename(f_p = n) %>%
+  mutate(f_rel = f_pt/(f_t*f_p))
+freqR_ptr
+```
+
+
+
+*Gráfico da rede de conexões, com frequencias relativas, entre tópicos (exceto "outros") e tipos de publicação:*
+
+```{r }
+freq_pt_graph = freqR_ptr %>% filter(topico != "5_outros") %>% graph_from_data_frame()
+
+a <- grid::arrow(type = "closed", length = unit(.1, "inches"))
+
+ggraph(freq_pt_graph, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = f_rel, edge_width = f_rel), show.legend = FALSE, edge_colour = "cyan4") +
+  geom_node_point(color = "lightgreen", size = 11) +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1) 
+```
+
+*Gráfico matricial das frequencias relativas entre os tópicos (exceto "outros") e os tipos de publicação:*
+
+```{r }
+freqR_ptr %>% filter(topico != "5_outros") %>%
+  ggplot(aes(topico, publicacao)) +
+    geom_raster(aes(fill = f_rel)) + 
+    #geom_raster(aes(fill = n), interpolate = TRUE) + 
+    scale_fill_gradient2(high = "cyan4") +
+    #scale_fill_gradient2(high = "black", label = percent_format()) +
+    theme_minimal() 
+```
+
+## Palavras-chave stemized mais frequentes nos documentos, por tópicos
+
+A sequir, a lista das 50 mais frequentes, o gráfico das 15 mais frequentes e a nuvem de palavras.
+
+*Lista das top 50 stemized mais frequentes por tópico:*
+
+```{r }
+tk.skey.topicos = tk.skey %>% count(word, topico, sort = TRUE) %>% slice(1:50)
+tk.skey.topicos
+```
+
+*Gráfico das top 10 stemized por publicação (exceto "outros"):*
+
+```{r }
+tk.skey %>% filter(publicacao != "outros") %>%
+  count(word, publicacao, sort = TRUE) %>%
+  mutate(word = reorder(word, n)) %>%
+  group_by(publicacao) %>%
+  top_n(10) %>%
+  ggplot(aes(word, n, fill = publicacao)) +
+    geom_col(show.legend = FALSE) +
+    xlab(NULL) +
+    coord_flip() + 
+    facet_wrap(~publicacao, scales = "free")
+```
+
+*Gráfico das top 10 stemized por tópico (exceto "outros"):*
+
+```{r }
+tk.skey %>% filter(topico != "outros") %>%
+  count(word, topico, sort = TRUE) %>%
+  mutate(word = reorder(word, n)) %>%
+  group_by(topico) %>%
+  top_n(10) %>%
+  ggplot(aes(word, n, fill = topico)) +
+    geom_col(show.legend = FALSE) +
+    xlab(NULL) +
+    coord_flip() + 
+    facet_wrap(~topico, scales = "free")
+```
+
+
+## Palavras-chave de maiores tf-idf por tópicos
+
+*Frequência do termo - tf -* é a frequencia relativa de uma palavra (token) no topico:
+$$ tf(\mathrm{token, topico}) = \dfrac{freq \ do \ token \ no \ topico}{qtd \ tokens \ no \ topico} $$
+
+*Frequência inversa do documento - idf -* (no presente caso, frequencia inversa do tópico) é dada por:
+$$ idf(\mathrm{token}) = \dfrac{qtd \ topicos}{qtd \ topicos \ com \ o \ token} $$
+O tf-idf da palavra (token) é calculado fazendo a multiplicação 
+$$ tf(\mathrm{token, topico}) \cdot idf(\mathrm{token}) $$
+
+O idf diminui o peso de palavras usadas comumente e aumenta o peso para as palavras que não são muito usadas em uma coleção de documentos (aqui, tópicos). Dessa forma, com o método tf-idf em geral não é necessário retirar previamente as stopwords e termos com números, mas como aqui são poucas quantidades de palavras (apenas das palavras-chave dos documentos), vamos manter a exclusão das stopwords e as numéricas.
+
+Veja sobre a "Lei de Zipf" aqui: <https://pt.wikipedia.org/wiki/Lei_de_Zipf>.
+
+Como as frequencias são relativas por tópicos e o tópico "outros" tem baixíssima frequencia, este iria distorcer os resultados caso fosse mantido na ponderação, por isso o retirei dessa análise
+
+```{r }
+tk.tfidf = tk.key %>% filter(topico != "outros") %>% count(word, topico, sort = TRUE) %>% 
+  bind_tf_idf(word, topico, n) %>% arrange(desc(tf_idf))
+
+```
+
+*Lista das top 50 tf-idf (exceto tópico "outros"):*
+
+```{r }
+tk.tfidf[1:50,]
+```
+
+*Gráfico das top 10 tf-idf por tópico (exceto "outros"):*
+
+```{r }
+tk.tfidf %>% filter(topico != "outros") %>%
+  arrange(desc(tf_idf)) %>%
+  mutate(word = factor(word, levels = rev(unique(word)))) %>%
+  group_by(topico) %>%
+  top_n(8) %>%
+  ungroup %>%
+  ggplot(aes(word, tf_idf, fill = topico)) +
+    geom_col(show.legend = FALSE) +
+    labs(x = NULL, y = "tf-idf") +
+    facet_wrap(~topico, ncol = 2, scales = "free") +
+    coord_flip()
+```
+
+
+## Palavras-chave stemized de maiores tf-idf por tópicos
+
+```{r }
+tk.tfidfs = tk.skey %>% filter(topico != "outros") %>% count(word, topico, sort = TRUE) %>% 
+  bind_tf_idf(word, topico, n) %>% arrange(desc(tf_idf))
+```
+
+*Lista das top 50 tf-idf (exceto tópico "outros"):*
+
+```{r }
+tk.tfidfs[1:50,]
+```
+
+*Gráfico das top 10 tf-idf por tópico (exceto "outros"):*
+
+```{r }
+tk.tfidfs %>% filter(topico != "outros") %>%
+  arrange(desc(tf_idf)) %>%
+  mutate(word = factor(word, levels = rev(unique(word)))) %>%
+  group_by(topico) %>%
+  top_n(8) %>%
+  ungroup %>%
+  ggplot(aes(word, tf_idf, fill = topico)) +
+    geom_col(show.legend = FALSE) +
+    labs(x = NULL, y = "tf-idf") +
+    facet_wrap(~topico, ncol = 2, scales = "free") +
+    coord_flip()
+```
+
+
+
+
